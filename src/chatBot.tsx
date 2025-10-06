@@ -17,7 +17,7 @@ interface ColorTheme {
   botMessageBg?: string;
   botMessageText?: string;
   botMessageBorder?: string;
-  userMessageBg?: string;
+ userMessageBg?: string;
   userMessageText?: string;
   bodyBg?: string;
   bodyText?: string;
@@ -163,7 +163,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     setShowWelcome(false);
     const welcomeMessage: Message = {
       id: '1',
-      content: `Hello! I'm your AI assistant for ${websiteInfo.title || 'this website'}.  How can I assist you today?`,
+      content: `Hello! I'm your AI assistant for ${websiteInfo.title || 'this website'}. How can I assist you today?`,
       role: 'assistant',
       timestamp: new Date()
     };
@@ -409,7 +409,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
             backgroundColor: colors.bodyBg,
             borderColor: colors.borderColor,
             boxShadow: `0 25px 50px ${colors.shadowColor}`,
-            backdropFilter: 'blur(10px)'
+            backdropFilter: 'blur(10px)',
+            maxWidth: isMobile ? 'none' : '450px',  // Added max-width constraint
+            width: isMobile ? '100%' : '410px'  // Ensure it doesn't exceed 450px
           }}
         >
           <div 
@@ -527,7 +529,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
               className="flex-1 overflow-y-auto px-4 py-4"
               style={{ backgroundColor: colors.bodyBg }}
             >
-              <div className="space-y-4 w-full">
+              <div className="space-y-4 w-full max-w-full"> {/* Added max-width constraint */}
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -543,18 +545,20 @@ const ChatBot: React.FC<ChatBotProps> = ({
                     )}
                     <div
                       className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                        message.role === 'user' ? 'ml-auto' : 'border'
+                        message.role === 'user' ? 'ml-auto' : 'border break-words' // Added break-words for long content
                       }`}
                       style={
                         message.role === 'user'
                           ? { 
                               backgroundColor: colors.userMessageBg,
-                              color: colors.userMessageText 
+                              color: colors.userMessageText,
+                              maxWidth: 'calc(100% - 40px)' // Ensure message doesn't exceed container width
                             }
                           : { 
                               backgroundColor: colors.botMessageBg,
                               color: colors.botMessageText,
-                              borderColor: colors.botMessageBorder 
+                              borderColor: colors.botMessageBorder,
+                              maxWidth: 'calc(100% - 40px)' // Ensure message doesn't exceed container width
                             }
                       }
                     >
@@ -590,10 +594,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
                       <Bot size={16} />
                     </div>
                     <div 
-                      className="px-4 py-3 rounded-2xl border"
+                      className="px-4 py-3 rounded-2xl border break-words" // Added break-words for loading state too
                       style={{ 
                         backgroundColor: colors.botMessageBg,
-                        borderColor: colors.botMessageBorder 
+                        borderColor: colors.botMessageBorder,
+                        maxWidth: 'calc(100% - 40px)' // Ensure loading indicator doesn't exceed container width
                       }}
                     >
                       <Loader className="w-4 h-4 animate-spin" style={{ color: colors.botMessageText }} />
@@ -617,7 +622,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
             >
               <div>
                 <div 
-                  className="flex items-end space-x-2 p-3 border rounded-xl"
+                  className="flex items-end space-x-2 p-3 border rounded-xl max-w-full" // Added max-width constraint
                   style={{
                     backgroundColor: colors.inputBg,
                     borderColor: colors.inputBorder
@@ -630,16 +635,17 @@ const ChatBot: React.FC<ChatBotProps> = ({
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type your message..."
-                    className="flex-1 p-2 bg-transparent outline-none text-sm"
+                    className="flex-1 p-2 bg-transparent outline-none text-sm overflow-hidden text-ellipsis"
                     style={{ 
-                      color: colors.inputText
+                      color: colors.inputText,
+                      maxWidth: 'calc(100% - 40px)' // Ensure input field doesn't exceed container width
                     }}
                     disabled={isLoading}
                   />
                   <button
                     onClick={sendMessage}
                     disabled={!inputValue.trim() || isLoading}
-                    className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex-shrink-0" // Added flex-shrink-0 to prevent button from shrinking
                     style={{ 
                       backgroundColor: colors.primaryButton,
                       color: colors.primaryButtonText 

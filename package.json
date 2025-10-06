@@ -1,6 +1,6 @@
 {
-  "name": "react-ai-chatbot",
-  "version": "1.0.0",
+  "name": "react-chat-ai",
+  "version": "1.0.2",
   "description": "A customizable AI chatbot component for React and Next.js",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -22,7 +22,8 @@
     "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "lucide-react": "^0.507.0"
+    "lucide-react": "^0.507.0",
+    "react-chat-ai": "^1.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
@@ -66,5 +67,5 @@
   "bugs": {
     "url": "https://github.com/pk3808/react-chat-ai/issues"
   },
- "homepage": "https://github.com/pk3808/react-chat-ai#readme"
+  "homepage": "https://github.com/pk3808/react-chat-ai#readme"
 }
