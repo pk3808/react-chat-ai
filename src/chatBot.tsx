@@ -57,7 +57,7 @@ interface ChatBotProps {
     fontFamily?: string;
   };
   customization?: {
-    position?: 'bottom-right' | 'bottom-left';
+    position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
     theme?: 'light' | 'dark' | 'auto';
   };
   colorTheme?: ColorTheme;
@@ -368,33 +368,30 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
   const sizeClasses = isMobile ? 'w-full h-full' : 'w-[410px] h-[600px]';
 
-  const positionClasses = {
-    'bottom-right': isMobile ? 'bottom-6 right-6' : 'bottom-6 right-6',
-    'bottom-left': isMobile ? 'bottom-6 left-6' : 'bottom-6 left-6'
-  };
-
-  // For the chat window (when open), we can still use full screen on mobile
-  const windowPositionClasses = {
-    'bottom-right': isMobile ? 'inset-0' : 'bottom-6 right-6',
-    'bottom-left': isMobile ? 'inset-0' : 'bottom-6 left-6'
+  // Define position classes based on the customization prop
+  const positionStyle = {
+    position: 'fixed' as const,
+    fontFamily,
+    bottom: position.includes('bottom') ? '24px' : 'auto',
+    right: position.includes('right') ? '24px' : 'auto',
+    left: position.includes('left') ? '24px' : 'auto',
+    top: position.includes('top') ? '24px' : 'auto',
+    zIndex: 50,
   };
 
   return (
-    <div 
-      className={`fixed ${positionClasses[position]} z-50`}
-      style={{ fontFamily }}
-    >
+    <div style={positionStyle}>
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white transition-all duration-300 hover:scale-105 active:scale-95"
+          className="rounded-full shadow-lg flex items-center justify-center text-white transition-all duration-300 hover:scale-105 active:scale-95"
           style={{ 
             backgroundColor: colors.primaryButton,
             color: colors.primaryButtonText,
             boxShadow: `0 4px 20px ${colors.shadowColor}`
           }}
         >
-          <Bot size={24} />
+          <Bot className="w-12 h-12 p-3 " />
         </button>
       )}
 
@@ -411,7 +408,10 @@ const ChatBot: React.FC<ChatBotProps> = ({
             boxShadow: `0 25px 50px ${colors.shadowColor}`,
             backdropFilter: 'blur(10px)',
             maxWidth: isMobile ? 'none' : '450px',  // Added max-width constraint
-            width: isMobile ? '100%' : '410px'  // Ensure it doesn't exceed 450px
+            width: isMobile ? '100%' : '410px',  // Ensure it doesn't exceed 450px
+            height: isMobile ? '100%' : '600px', // Fixed height to prevent expansion
+            maxHeight: isMobile ? '100%' : '100vh', // Prevent exceeding viewport height
+            overflow: 'hidden' // Prevent any overflow from the main container
           }}
         >
           <div 
@@ -421,7 +421,8 @@ const ChatBot: React.FC<ChatBotProps> = ({
             style={{
               backgroundColor: colors.headerBg,
               borderBottomColor: colors.headerBorder,
-              color: colors.headerText
+              color: colors.headerText,
+              flexShrink: 0 // Prevent header from shrinking
             }}
           >
             <div className="flex items-center space-x-3">
@@ -527,7 +528,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
           ) : (
             <div 
               className="flex-1 overflow-y-auto px-4 py-4"
-              style={{ backgroundColor: colors.bodyBg }}
+              style={{ 
+                backgroundColor: colors.bodyBg,
+                minHeight: 0, // Needed for flex child to be properly constrained
+                overflowY: 'auto' // Explicitly set overflow for message area
+              }}
             >
               <div className="space-y-4 w-full max-w-full"> {/* Added max-width constraint */}
                 {messages.map((message) => (
