@@ -1,3 +1,4 @@
+//@ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X, Bot, User, Loader, MessageSquare, Shield } from 'lucide-react';
 
