@@ -1,6 +1,6 @@
 {
   "name": "react-chat-ai",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "A powerful React component to easily add an AI chat assistant to your website. Supports Google Gemini and OpenAI.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
