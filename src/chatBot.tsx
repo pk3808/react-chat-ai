@@ -1,4 +1,5 @@
 //@ts-nocheck
+"use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X, Bot, User, Loader, MessageSquare, Shield } from 'lucide-react';
 
@@ -18,7 +19,7 @@ interface ColorTheme {
   botMessageBg?: string;
   botMessageText?: string;
   botMessageBorder?: string;
- userMessageBg?: string;
+  userMessageBg?: string;
   userMessageText?: string;
   bodyBg?: string;
   bodyText?: string;
@@ -103,7 +104,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
   } = customization;
 
   const isDark = theme === 'dark' || (theme === 'auto' && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  
+
   const defaultColors: ColorTheme = {
     botMessageBg: isDark ? '#374151' : '#F3F4F6',
     botMessageText: isDark ? '#F9FAFB' : '#1F2937',
@@ -143,7 +144,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -172,12 +173,12 @@ const ChatBot: React.FC<ChatBotProps> = ({
   };
 
   const getGeminiResponse = async (message: string) => {
-    const context = websiteInfo.title 
+    const context = websiteInfo.title
       ? `You are a helpful assistant for ${websiteInfo.title}. ${websiteInfo.description || ''} Answer the user's questions based on this context, you are representing this website ,so act like you are ${websiteInfo.title}.`
       : 'You are a helpful assistant. Answer the user\'s questions.';
-    
+
     const geminiModel = (model && model.startsWith('gemini-')) ? model : 'gemini-2.0-flash';
-    
+
     // Use v1 API endpoint for stable models
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${geminiModel}:generateContent?key=${apiKey}`, {
       method: 'POST',
@@ -204,11 +205,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
   };
 
   const getOpenAIResponse = async (message: string) => {
-     const context = websiteInfo.title 
+    const context = websiteInfo.title
       ? `You are a helpful assistant for ${websiteInfo.title}. ${websiteInfo.description || ''} Answer the user's questions based on this context, you are representing this website ,so act like you are ${websiteInfo.title}.`
       : 'You are a helpful assistant. Answer the user\'s questions.';
-    
-    
+
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -238,10 +239,10 @@ const ChatBot: React.FC<ChatBotProps> = ({
       throw new Error('Custom API endpoint not provided');
     }
 
-    const context = websiteInfo.title 
+    const context = websiteInfo.title
       ? `You are a helpful assistant for ${websiteInfo.title}. ${websiteInfo.description || ''} Answer the user's questions based on this context.`
       : 'You are a helpful assistant. Answer the user\'s questions.';
-    
+
     const response = await fetch(customApiEndpoint, {
       method: 'POST',
       headers: {
@@ -276,14 +277,14 @@ const ChatBot: React.FC<ChatBotProps> = ({
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
-    
+
     if (onMessageSent) {
       onMessageSent(inputValue);
     }
 
     try {
       let aiResponse = '';
-      
+
       if (apiKey) {
         switch (provider) {
           case 'openai':
@@ -306,7 +307,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
           "I'm here to help! Let me provide you with some details on that topic.",
           "Thank you for asking. Here's my response to your inquiry..."
         ];
-        
+
         const assistantMessage: Message = {
           id: generateUniqueId(), // Use the helper function to generate unique IDs
           content: responses[Math.floor(Math.random() * responses.length)],
@@ -318,7 +319,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
         await new Promise(resolve => setTimeout(resolve, 1500));
         setMessages(prev => [...prev, assistantMessage]);
         setIsLoading(false);
-        
+
         if (onResponseReceived) {
           onResponseReceived(assistantMessage.content);
         }
@@ -333,13 +334,13 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
       setMessages(prev => [...prev, assistantMessage]);
       setIsLoading(false);
-      
+
       if (onResponseReceived) {
         onResponseReceived(assistantMessage.content);
       }
     } catch (error) {
       console.error(`Error calling ${provider} API:`, error);
-      
+
       const errorMessage: Message = {
         id: generateUniqueId(), // Use the helper function to generate unique IDs
         content: `I'm having trouble connecting to the ${provider} service right now. Please try again later. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -349,7 +350,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
 
       setMessages(prev => [...prev, errorMessage]);
       setIsLoading(false);
-      
+
       if (onResponseReceived) {
         onResponseReceived(errorMessage.content);
       }
@@ -386,7 +387,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
         <button
           onClick={() => setIsOpen(true)}
           className="rounded-full shadow-lg flex items-center justify-center text-white transition-all duration-300 hover:scale-105 active:scale-95"
-          style={{ 
+          style={{
             backgroundColor: colors.primaryButton,
             color: colors.primaryButtonText,
             boxShadow: `0 4px 20px ${colors.shadowColor}`
@@ -397,13 +398,11 @@ const ChatBot: React.FC<ChatBotProps> = ({
       )}
 
       {isOpen && (
-        <div 
-          className={`${sizeClasses} ${
-            isMobile ? 'border-0 rounded-none' : 'border rounded-2xl'
-          } shadow-2xl flex flex-col transition-all duration-300 ${
-            isMobile ? 'fixed inset-0' : ''
-          }`}
-          style={{ 
+        <div
+          className={`${sizeClasses} ${isMobile ? 'border-0 rounded-none' : 'border rounded-2xl'
+            } shadow-2xl flex flex-col transition-all duration-300 ${isMobile ? 'fixed inset-0' : ''
+            }`}
+          style={{
             backgroundColor: colors.bodyBg,
             borderColor: colors.borderColor,
             boxShadow: `0 25px 50px ${colors.shadowColor}`,
@@ -415,10 +414,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
             overflow: 'hidden' // Prevent any overflow from the main container
           }}
         >
-          <div 
-            className={`flex items-center justify-between p-4 border-b ${
-              isMobile ? 'rounded-none' : 'rounded-t-2xl'
-            }`}
+          <div
+            className={`flex items-center justify-between p-4 border-b ${isMobile ? 'rounded-none' : 'rounded-t-2xl'
+              }`}
             style={{
               backgroundColor: colors.headerBg,
               borderBottomColor: colors.headerBorder,
@@ -430,7 +428,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
               {logo ? (
                 <img src={logo} alt="Logo" className="w-8 h-8 rounded-full" />
               ) : (
-                <div 
+                <div
                   className="w-8 h-8 rounded-full flex items-center justify-center text-white"
                   style={{ backgroundColor: colors.botIconBg }}
                 >
@@ -449,9 +447,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
             <button
               onClick={() => setIsOpen(false)}
               className="p-1.5 rounded-lg transition-colors"
-              style={{ 
+              style={{
                 backgroundColor: 'transparent',
-                color: colors.secondaryButtonText 
+                color: colors.secondaryButtonText
               }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.secondaryButton || ''}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -461,13 +459,13 @@ const ChatBot: React.FC<ChatBotProps> = ({
           </div>
 
           {showWelcome ? (
-            <div 
+            <div
               className="flex-1 overflow-y-auto flex flex-col justify-center items-center px-4 py-4"
               style={{ backgroundColor: colors.bodyBg }}
             >
               <div className="text-center max-w-sm mx-auto space-y-6">
                 <div className="mx-auto mb-4">
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-full flex items-center justify-center text-white mx-auto"
                     style={{ backgroundColor: colors.botIconBg }}
                   >
@@ -517,9 +515,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
                 <button
                   onClick={startChat}
                   className="w-full py-2.5 px-4 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg text-sm"
-                  style={{ 
+                  style={{
                     backgroundColor: colors.primaryButton,
-                    color: colors.primaryButtonText 
+                    color: colors.primaryButtonText
                   }}
                 >
                   Start chatting
@@ -527,9 +525,9 @@ const ChatBot: React.FC<ChatBotProps> = ({
               </div>
             </div>
           ) : (
-            <div 
+            <div
               className="flex-1 overflow-y-auto px-4 py-4"
-              style={{ 
+              style={{
                 backgroundColor: colors.bodyBg,
                 minHeight: 0, // Needed for flex child to be properly constrained
                 overflowY: 'auto' // Explicitly set overflow for message area
@@ -542,7 +540,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} space-x-2`}
                   >
                     {message.role === 'assistant' && (
-                      <div 
+                      <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-1"
                         style={{ backgroundColor: colors.botIconBg }}
                       >
@@ -550,38 +548,37 @@ const ChatBot: React.FC<ChatBotProps> = ({
                       </div>
                     )}
                     <div
-                      className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                        message.role === 'user' ? 'ml-auto' : 'border break-words' // Added break-words for long content
-                      }`}
+                      className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${message.role === 'user' ? 'ml-auto' : 'border break-words' // Added break-words for long content
+                        }`}
                       style={
                         message.role === 'user'
-                          ? { 
-                              backgroundColor: colors.userMessageBg,
-                              color: colors.userMessageText,
-                              maxWidth: 'calc(100% - 40px)' // Ensure message doesn't exceed container width
-                            }
-                          : { 
-                              backgroundColor: colors.botMessageBg,
-                              color: colors.botMessageText,
-                              borderColor: colors.botMessageBorder,
-                              maxWidth: 'calc(100% - 40px)' // Ensure message doesn't exceed container width
-                            }
+                          ? {
+                            backgroundColor: colors.userMessageBg,
+                            color: colors.userMessageText,
+                            maxWidth: 'calc(100% - 40px)' // Ensure message doesn't exceed container width
+                          }
+                          : {
+                            backgroundColor: colors.botMessageBg,
+                            color: colors.botMessageText,
+                            borderColor: colors.botMessageBorder,
+                            maxWidth: 'calc(100% - 40px)' // Ensure message doesn't exceed container width
+                          }
                       }
                     >
                       {message.content}
-                      <div 
+                      <div
                         className="text-xs mt-2"
-                        style={{ 
-                          color: message.role === 'user' 
+                        style={{
+                          color: message.role === 'user'
                             ? `${colors.userMessageText}B3`
-                            : colors.timestampText 
+                            : colors.timestampText
                         }}
                       >
                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                     {message.role === 'user' && (
-                      <div 
+                      <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-1"
                         style={{ backgroundColor: colors.userIconBg }}
                       >
@@ -590,18 +587,18 @@ const ChatBot: React.FC<ChatBotProps> = ({
                     )}
                   </div>
                 ))}
-                
+
                 {isLoading && (
                   <div className="flex justify-start space-x-2">
-                    <div 
+                    <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0"
                       style={{ backgroundColor: colors.botIconBg }}
                     >
                       <Bot size={16} />
                     </div>
-                    <div 
+                    <div
                       className="px-4 py-3 rounded-2xl border break-words" // Added break-words for loading state too
-                      style={{ 
+                      style={{
                         backgroundColor: colors.botMessageBg,
                         borderColor: colors.botMessageBorder,
                         maxWidth: 'calc(100% - 40px)' // Ensure loading indicator doesn't exceed container width
@@ -617,17 +614,16 @@ const ChatBot: React.FC<ChatBotProps> = ({
           )}
 
           {!showWelcome && (
-            <div 
-              className={`p-4 border-t ${
-                isMobile ? 'rounded-none' : 'rounded-b-2xl'
-              }`}
+            <div
+              className={`p-4 border-t ${isMobile ? 'rounded-none' : 'rounded-b-2xl'
+                }`}
               style={{
                 backgroundColor: colors.footerBg,
                 borderTopColor: colors.footerBorder
               }}
             >
               <div>
-                <div 
+                <div
                   className="flex items-end space-x-2 p-3 border rounded-xl max-w-full" // Added max-width constraint
                   style={{
                     backgroundColor: colors.inputBg,
@@ -642,7 +638,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                     onKeyPress={handleKeyPress}
                     placeholder="Type your message..."
                     className="flex-1 p-2 bg-transparent outline-none text-sm overflow-hidden text-ellipsis"
-                    style={{ 
+                    style={{
                       color: colors.inputText,
                       maxWidth: 'calc(100% - 40px)' // Ensure input field doesn't exceed container width
                     }}
@@ -652,15 +648,15 @@ const ChatBot: React.FC<ChatBotProps> = ({
                     onClick={sendMessage}
                     disabled={!inputValue.trim() || isLoading}
                     className="p-2 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex-shrink-0" // Added flex-shrink-0 to prevent button from shrinking
-                    style={{ 
+                    style={{
                       backgroundColor: colors.primaryButton,
-                      color: colors.primaryButtonText 
+                      color: colors.primaryButtonText
                     }}
                   >
                     <Send size={16} />
                   </button>
                 </div>
-                <p 
+                <p
                   className="text-xs mt-3 text-center"
                   style={{ color: colors.footerText }}
                 >
