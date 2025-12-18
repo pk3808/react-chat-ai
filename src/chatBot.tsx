@@ -2,6 +2,29 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X, Bot, User, Loader, MessageSquare, Shield } from 'lucide-react';
+import CryptoJS from 'crypto-js';
+
+// This MUST match the ENCRYPTION_SECRET in your backend .env
+const SECRET_PASSPHRASE = "default_secret_please_change";
+
+// Helper to match your Backend's Node.js encryption
+const encryptKey = (plainKey: string) => {
+  if (!plainKey) return '';
+  // 1. Generate a 32-byte key from the secret (SHA256)
+  const key = CryptoJS.SHA256(SECRET_PASSPHRASE);
+
+  // 2. Generate a random IV (16 bytes)
+  const iv = CryptoJS.lib.WordArray.random(16);
+
+  // 3. Encrypt
+  const encrypted = CryptoJS.AES.encrypt(plainKey, key, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  });
+  // 4. Format as "iv:encrypted" (Hex) to match backend
+  return iv.toString(CryptoJS.enc.Hex) + ':' + encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+};
 
 // Helper function to generate unique IDs
 const generateUniqueId = (): string => {
@@ -173,56 +196,56 @@ const ChatBot: React.FC<ChatBotProps> = ({
   };
 
   const getGeminiResponse = async (message: string) => {
-    const context = websiteInfo.title
-      ? `You are a helpful assistant for ${websiteInfo.title}. ${websiteInfo.description || ''} Answer the user's questions based on this context, you are representing this website ,so act like you are ${websiteInfo.title}.`
-      : 'You are a helpful assistant. Answer the user\'s questions.';
+    // const context = websiteInfo.title
+    //   ? `You are a helpful assistant for ${websiteInfo.title}. ${websiteInfo.description || ''} Answer the user's questions based on this context, you are representing this website ,so act like you are ${websiteInfo.title}.`
+    //   : 'You are a helpful assistant. Answer the user\'s questions.';
 
     const geminiModel = (model && model.startsWith('gemini-')) ? model : 'gemini-2.0-flash';
 
-    // Use v1 API endpoint for stable models
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${geminiModel}:generateContent?key=${apiKey}`, {
+    // Use secure backend endpoint
+    const encryptedKey = encryptKey(apiKey);
+    const response = await fetch('https://chat-bot-backend-bl8z.vercel.app/api/chat/gemini', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-encrypted-api-key': encryptedKey
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `${context}\n\nUser question: ${message}\n\nPlease provide a helpful response.`
-          }]
-        }]
+        message,
+        websiteInfo,
+        model: geminiModel
+        // ApiKey removed from body
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Gemini API Error:', errorData);
-      throw new Error(`Gemini API request failed: ${errorData.error?.message || response.status}`);
+      throw new Error(`Gemini API request failed: ${errorData.error || response.status}`);
     }
 
     const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't process your request. Please try again.";
+    return data.reply || "I couldn't process your request. Please try again.";
   };
 
   const getOpenAIResponse = async (message: string) => {
-    const context = websiteInfo.title
-      ? `You are a helpful assistant for ${websiteInfo.title}. ${websiteInfo.description || ''} Answer the user's questions based on this context, you are representing this website ,so act like you are ${websiteInfo.title}.`
-      : 'You are a helpful assistant. Answer the user\'s questions.';
+    // const context = websiteInfo.title
+    //   ? `You are a helpful assistant for ${websiteInfo.title}. ${websiteInfo.description || ''} Answer the user's questions based on this context, you are representing this website ,so act like you are ${websiteInfo.title}.`
+    //   : 'You are a helpful assistant. Answer the user\'s questions.';
 
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const encryptedKey = encryptKey(apiKey);
+    const response = await fetch('https://chat-bot-backend-bl8z.vercel.app/api/chat/openai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'x-encrypted-api-key': encryptedKey
       },
       body: JSON.stringify({
         model: defaultModel,
-        messages: [
-          { role: 'system', content: context },
-          { role: 'user', content: message }
-        ],
-        temperature: 0.7
+        message,
+        websiteInfo
+        // ApiKey removed from body
       })
     });
 
@@ -231,9 +254,8 @@ const ChatBot: React.FC<ChatBotProps> = ({
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || "I couldn't process your request. Please try again.";
+    return data.reply || "I couldn't process your request. Please try again.";
   };
-
   const getCustomResponse = async (message: string) => {
     if (!customApiEndpoint) {
       throw new Error('Custom API endpoint not provided');
@@ -285,44 +307,24 @@ const ChatBot: React.FC<ChatBotProps> = ({
     try {
       let aiResponse = '';
 
-      if (apiKey) {
-        switch (provider) {
-          case 'openai':
-            aiResponse = await getOpenAIResponse(inputValue);
-            break;
-          case 'custom':
+      // Check provider, default to gemini if not specified or if apiKey is missing
+      // We no longer strictly require apiKey prop for gemini/openai as it's on the server
+      switch (provider) {
+        case 'openai':
+          aiResponse = await getOpenAIResponse(inputValue);
+          break;
+        case 'custom':
+          // Custom still might need logic or checking
+          if (customApiEndpoint) {
             aiResponse = await getCustomResponse(inputValue);
-            break;
-          case 'gemini':
-          default:
-            aiResponse = await getGeminiResponse(inputValue);
-            break;
-        }
-      } else {
-        // Simulate a response when no API key is provided
-        const responses = [
-          "I understand your question. Let me help you with that.",
-          "That's a great question! Here's what I can tell you...",
-          "Based on the information about " + (websiteInfo.title || "our website") + ", I'd suggest...",
-          "I'm here to help! Let me provide you with some details on that topic.",
-          "Thank you for asking. Here's my response to your inquiry..."
-        ];
-
-        const assistantMessage: Message = {
-          id: generateUniqueId(), // Use the helper function to generate unique IDs
-          content: responses[Math.floor(Math.random() * responses.length)],
-          role: 'assistant',
-          timestamp: new Date()
-        };
-
-        // Use a promise to maintain async flow
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsLoading(false);
-
-        if (onResponseReceived) {
-          onResponseReceived(assistantMessage.content);
-        }
+          } else {
+            throw new Error("Custom endpoint not configured");
+          }
+          break;
+        case 'gemini':
+        default:
+          aiResponse = await getGeminiResponse(inputValue);
+          break;
       }
 
       const assistantMessage: Message = {
